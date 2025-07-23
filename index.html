@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spiked Balls Animation</title>
+  <title>Dark Rain + Spiked Balls</title>
   <style>
     html, body {
       margin: 0;
@@ -12,27 +12,79 @@
       overflow: hidden;
     }
     canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
       display: block;
     }
   </style>
 </head>
 <body>
-<canvas id="bgCanvas"></canvas>
+
+<!-- Canvas for Rain -->
+<canvas id="rainCanvas"></canvas>
+
+<!-- Canvas for Spiked Balls -->
+<canvas id="ballsCanvas"></canvas>
 
 <script>
-  const canvas = document.getElementById("bgCanvas");
-  const ctx = canvas.getContext("2d");
+  // Get both canvases and contexts
+  const rainCanvas = document.getElementById('rainCanvas');
+  const ballsCanvas = document.getElementById('ballsCanvas');
+  const rainCtx = rainCanvas.getContext('2d');
+  const ballCtx = ballsCanvas.getContext('2d');
 
-  let w = window.innerWidth;
-  let h = window.innerHeight;
-  canvas.width = w;
-  canvas.height = h;
+  let w = rainCanvas.width = ballsCanvas.width = window.innerWidth;
+  let h = rainCanvas.height = ballsCanvas.height = window.innerHeight;
 
-  window.addEventListener("resize", () => {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    w = rainCanvas.width = ballsCanvas.width = window.innerWidth;
+    h = rainCanvas.height = ballsCanvas.height = window.innerHeight;
   });
 
+  // -------- Rain Setup --------
+  const drops = [];
+  const dropCount = 300;
+  let fadeIn = false;
+
+  for (let i = 0; i < dropCount; i++) {
+    drops.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      length: 10 + Math.random() * 20,
+      speed: 4 + Math.random() * 5,
+      opacity: 0
+    });
+  }
+
+  function animateRain() {
+    rainCtx.clearRect(0, 0, w, h);
+    rainCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    rainCtx.fillRect(0, 0, w, h);
+
+    drops.forEach(drop => {
+      if (fadeIn && drop.opacity < 1) {
+        drop.opacity += 0.01;
+      }
+
+      rainCtx.beginPath();
+      rainCtx.strokeStyle = `rgba(255, 255, 255, ${drop.opacity})`;
+      rainCtx.lineWidth = 1;
+      rainCtx.moveTo(drop.x, drop.y);
+      rainCtx.lineTo(drop.x, drop.y + drop.length);
+      rainCtx.stroke();
+
+      drop.y += drop.speed;
+      if (drop.y > h) {
+        drop.y = -drop.length;
+        drop.x = Math.random() * w;
+      }
+    });
+
+    requestAnimationFrame(animateRain);
+  }
+
+  // -------- Spiked Balls Setup --------
   class SpikedBall {
     constructor() {
       this.reset();
@@ -62,7 +114,7 @@
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rotation);
 
-      // Main ball
+      // Ball body
       ctx.beginPath();
       ctx.arc(0, 0, this.r, 0, Math.PI * 2);
       ctx.fillStyle = "white";
@@ -95,16 +147,20 @@
     balls.push(new SpikedBall());
   }
 
-  function animate() {
-    ctx.clearRect(0, 0, w, h);
+  function animateBalls() {
+    ballCtx.clearRect(0, 0, w, h);
     balls.forEach(ball => {
       ball.update();
-      ball.draw(ctx);
+      ball.draw(ballCtx);
     });
-    requestAnimationFrame(animate);
+    requestAnimationFrame(animateBalls);
   }
 
-  animate();
+  // Start animation after short delay (1 second)
+  setTimeout(() => { fadeIn = true; }, 1000);
+
+  animateRain();
+  animateBalls();
 </script>
 </body>
 </html>
