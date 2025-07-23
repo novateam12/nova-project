@@ -3,164 +3,209 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dark Rain + Spiked Balls</title>
+  <title>NOVA TEAM</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       background: black;
+      height: 100%;
       overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
     }
+
     canvas {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
-      display: block;
+      z-index: -1;
+    }
+
+    .branding {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 8px white;
+    }
+
+    .center-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 95%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 3px dashed white;
+      border-radius: 25px;
+      padding: 40px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .center-box button, .download-btn, .copy-btn {
+      margin-top: 20px;
+      padding: 14px 30px;
+      background: #00ccff;
+      color: black;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
 
-<!-- Canvas for Rain -->
-<canvas id="rainCanvas"></canvas>
+<canvas id="bgCanvas"></canvas>
 
-<!-- Canvas for Spiked Balls -->
-<canvas id="ballsCanvas"></canvas>
+<div class="branding">NOVA TEAM</div>
+
+<div class="center-box" id="mainBox">
+  <p>Drag & Drop your file here</p>
+  <p>or</p>
+  <button onclick="fileInput.click()">Select File</button>
+  <input type="file" id="fileInput" hidden />
+  <div id="linkArea"></div>
+</div>
 
 <script>
-  // Get both canvases and contexts
-  const rainCanvas = document.getElementById('rainCanvas');
-  const ballsCanvas = document.getElementById('ballsCanvas');
-  const rainCtx = rainCanvas.getContext('2d');
-  const ballCtx = ballsCanvas.getContext('2d');
-
-  let w = rainCanvas.width = ballsCanvas.width = window.innerWidth;
-  let h = rainCanvas.height = ballsCanvas.height = window.innerHeight;
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = window.innerWidth;
+  let h = canvas.height = window.innerHeight;
 
   window.addEventListener('resize', () => {
-    w = rainCanvas.width = ballsCanvas.width = window.innerWidth;
-    h = rainCanvas.height = ballsCanvas.height = window.innerHeight;
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
   });
 
-  // -------- Rain Setup --------
+  // ---------- LIGHT RAIN (LIKE STARS) ----------
   const drops = [];
-  const dropCount = 300;
-  let fadeIn = false;
-
-  for (let i = 0; i < dropCount; i++) {
+  for (let i = 0; i < 200; i++) {
     drops.push({
       x: Math.random() * w,
       y: Math.random() * h,
-      length: 10 + Math.random() * 20,
-      speed: 4 + Math.random() * 5,
-      opacity: 0
+      len: 10 + Math.random() * 15,
+      speed: 2 + Math.random() * 3,
+      alpha: 0.5 + Math.random() * 0.5
     });
   }
 
-  function animateRain() {
-    rainCtx.clearRect(0, 0, w, h);
-    rainCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    rainCtx.fillRect(0, 0, w, h);
+  // ---------- SPIKED BALLS ----------
+  const balls = [];
+  const numBalls = 15;
+  for (let i = 0; i < numBalls; i++) {
+    balls.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: 15 + Math.random() * 10,
+      dx: 1.5 + Math.random() * 2,
+      color: 'white',
+      spikes: 6 + Math.floor(Math.random() * 3),
+      angle: 0
+    });
+  }
 
-    drops.forEach(drop => {
-      if (fadeIn && drop.opacity < 1) {
-        drop.opacity += 0.01;
-      }
+  function drawSpikedBall(ball) {
+    ctx.save();
+    ctx.translate(ball.x, ball.y);
+    ctx.rotate(ball.angle);
 
-      rainCtx.beginPath();
-      rainCtx.strokeStyle = `rgba(255, 255, 255, ${drop.opacity})`;
-      rainCtx.lineWidth = 1;
-      rainCtx.moveTo(drop.x, drop.y);
-      rainCtx.lineTo(drop.x, drop.y + drop.length);
-      rainCtx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, ball.r, 0, Math.PI * 2);
+    ctx.fillStyle = ball.color;
+    ctx.shadowColor = "white";
+    ctx.shadowBlur = 10;
+    ctx.fill();
+
+    for (let i = 0; i < ball.spikes; i++) {
+      const angle = (Math.PI * 2 / ball.spikes) * i;
+      const x1 = Math.cos(angle) * ball.r;
+      const y1 = Math.sin(angle) * ball.r;
+      const x2 = Math.cos(angle) * (ball.r + 10);
+      const y2 = Math.sin(angle) * (ball.r + 10);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawRain() {
+    ctx.clearRect(0, 0, w, h);
+
+    for (let drop of drops) {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,255,255,${drop.alpha})`;
+      ctx.moveTo(drop.x, drop.y);
+      ctx.lineTo(drop.x, drop.y + drop.len);
+      ctx.stroke();
 
       drop.y += drop.speed;
       if (drop.y > h) {
-        drop.y = -drop.length;
+        drop.y = -drop.len;
         drop.x = Math.random() * w;
       }
-    });
-
-    requestAnimationFrame(animateRain);
-  }
-
-  // -------- Spiked Balls Setup --------
-  class SpikedBall {
-    constructor() {
-      this.reset();
     }
 
-    reset() {
-      this.r = 20 + Math.random() * 10;
-      this.x = -this.r;
-      this.y = Math.random() * h;
-      this.dx = 1.5 + Math.random() * 2.5;
-      this.spikes = 8;
-      this.rotation = Math.random() * Math.PI * 2;
-      this.rotationSpeed = 0.03;
-    }
-
-    update() {
-      this.x += this.dx;
-      this.rotation += this.rotationSpeed;
-      if (this.x - this.r > w) {
-        this.reset();
-        this.y = Math.random() * h;
+    for (let b of balls) {
+      b.x += b.dx;
+      b.angle += 0.02;
+      if (b.x - b.r > w) {
+        b.x = -b.r;
+        b.y = Math.random() * h;
       }
-    }
-
-    draw(ctx) {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-
-      // Ball body
-      ctx.beginPath();
-      ctx.arc(0, 0, this.r, 0, Math.PI * 2);
-      ctx.fillStyle = "white";
-      ctx.shadowColor = "white";
-      ctx.shadowBlur = 8;
-      ctx.fill();
-
-      // Spikes
-      for (let i = 0; i < this.spikes; i++) {
-        const angle = (Math.PI * 2 / this.spikes) * i;
-        const x1 = Math.cos(angle) * this.r;
-        const y1 = Math.sin(angle) * this.r;
-        const x2 = Math.cos(angle) * (this.r + 20);
-        const y2 = Math.sin(angle) * (this.r + 20);
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      ctx.restore();
+      drawSpikedBall(b);
     }
   }
 
-  const balls = [];
-  const numBalls = 12;
-  for (let i = 0; i < numBalls; i++) {
-    balls.push(new SpikedBall());
+  function animate() {
+    drawRain();
+    requestAnimationFrame(animate);
   }
 
-  function animateBalls() {
-    ballCtx.clearRect(0, 0, w, h);
-    balls.forEach(ball => {
-      ball.update();
-      ball.draw(ballCtx);
-    });
-    requestAnimationFrame(animateBalls);
+  animate();
+
+  // Upload area logic (optional)
+  const fileInput = document.getElementById('fileInput');
+  const linkArea = document.getElementById('linkArea');
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const blobLink = URL.createObjectURL(file);
+    const fileName = file.name;
+    const fullURL = `${location.href.split('#')[0]}#download`;
+
+    linkArea.innerHTML = `
+      <p>Link is ready:</p>
+      <input type="text" value="${fullURL}" id="copyText" readonly style="width:90%; padding:10px; font-size:16px;" />
+      <br>
+      <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
+    `;
+
+    sessionStorage.setItem('fileURL', blobLink);
+    sessionStorage.setItem('fileName', fileName);
+  });
+
+  function copyLink() {
+    const input = document.getElementById('copyText');
+    input.select();
+    document.execCommand('copy');
+    alert('Link copied! Now open it in the same browser.');
   }
-
-  // Start animation after short delay (1 second)
-  setTimeout(() => { fadeIn = true; }, 1000);
-
-  animateRain();
-  animateBalls();
 </script>
 </body>
 </html>
