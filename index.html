@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NOVA TEAM</title>
+  <title>NOVA TEAM UPLOAD</title>
   <style>
     html, body {
       margin: 0;
@@ -11,7 +11,7 @@
       background: black;
       height: 100%;
       overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       color: white;
     }
 
@@ -29,7 +29,6 @@
       font-size: 28px;
       font-weight: bold;
       color: white;
-      text-shadow: 0 0 8px white;
     }
 
     .center-box {
@@ -40,15 +39,14 @@
       width: 95%;
       max-width: 800px;
       background: rgba(255, 255, 255, 0.05);
-      border: 3px dashed white;
+      border: 2px dashed white;
       border-radius: 25px;
       padding: 40px;
       text-align: center;
       backdrop-filter: blur(10px);
-      z-index: 10;
     }
 
-    .center-box button, .download-btn, .copy-btn {
+    .center-box button, .copy-btn {
       margin-top: 20px;
       padding: 14px 30px;
       background: #00ccff;
@@ -59,125 +57,70 @@
       cursor: pointer;
       font-size: 18px;
     }
+
+    input[type="text"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
-
+<canvas id="bg"></canvas>
 <div class="branding">NOVA TEAM</div>
 
 <div class="center-box" id="mainBox">
   <p>Drag & Drop your file here</p>
   <p>or</p>
-  <button onclick="fileInput.click()">Select File</button>
+  <button onclick="document.getElementById('fileInput').click()">Select File</button>
   <input type="file" id="fileInput" hidden />
   <div id="linkArea"></div>
 </div>
 
 <script>
-  const canvas = document.getElementById('bgCanvas');
+  const canvas = document.getElementById('bg');
   const ctx = canvas.getContext('2d');
-  let w = canvas.width = window.innerWidth;
-  let h = canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
   window.addEventListener('resize', () => {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   });
 
-  // ---------- LIGHT RAIN (LIKE STARS) ----------
   const drops = [];
   for (let i = 0; i < 200; i++) {
     drops.push({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      len: 10 + Math.random() * 15,
-      speed: 2 + Math.random() * 3,
-      alpha: 0.5 + Math.random() * 0.5
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      len: 5 + Math.random() * 15,
+      speed: 2 + Math.random() * 3
     });
   }
 
-  // ---------- SPIKED BALLS ----------
-  const balls = [];
-  const numBalls = 15;
-  for (let i = 0; i < numBalls; i++) {
-    balls.push({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: 15 + Math.random() * 10,
-      dx: 1.5 + Math.random() * 2,
-      color: 'white',
-      spikes: 6 + Math.floor(Math.random() * 3),
-      angle: 0
-    });
-  }
-
-  function drawSpikedBall(ball) {
-    ctx.save();
-    ctx.translate(ball.x, ball.y);
-    ctx.rotate(ball.angle);
-
-    ctx.beginPath();
-    ctx.arc(0, 0, ball.r, 0, Math.PI * 2);
-    ctx.fillStyle = ball.color;
-    ctx.shadowColor = "white";
-    ctx.shadowBlur = 10;
-    ctx.fill();
-
-    for (let i = 0; i < ball.spikes; i++) {
-      const angle = (Math.PI * 2 / ball.spikes) * i;
-      const x1 = Math.cos(angle) * ball.r;
-      const y1 = Math.sin(angle) * ball.r;
-      const x2 = Math.cos(angle) * (ball.r + 10);
-      const y2 = Math.sin(angle) * (ball.r + 10);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  function drawRain() {
-    ctx.clearRect(0, 0, w, h);
-
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let drop of drops) {
       ctx.beginPath();
-      ctx.strokeStyle = `rgba(255,255,255,${drop.alpha})`;
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
       ctx.moveTo(drop.x, drop.y);
       ctx.lineTo(drop.x, drop.y + drop.len);
       ctx.stroke();
 
       drop.y += drop.speed;
-      if (drop.y > h) {
+      if (drop.y > canvas.height) {
         drop.y = -drop.len;
-        drop.x = Math.random() * w;
+        drop.x = Math.random() * canvas.width;
       }
     }
-
-    for (let b of balls) {
-      b.x += b.dx;
-      b.angle += 0.02;
-      if (b.x - b.r > w) {
-        b.x = -b.r;
-        b.y = Math.random() * h;
-      }
-      drawSpikedBall(b);
-    }
-  }
-
-  function animate() {
-    drawRain();
     requestAnimationFrame(animate);
   }
 
   animate();
 
-  // Upload area logic (optional)
+  // تحميل ملف وإظهار الرابط
   const fileInput = document.getElementById('fileInput');
   const linkArea = document.getElementById('linkArea');
 
@@ -185,26 +128,37 @@
     const file = fileInput.files[0];
     if (!file) return;
 
-    const blobLink = URL.createObjectURL(file);
-    const fileName = file.name;
-    const fullURL = `${location.href.split('#')[0]}#download`;
+    const blobURL = URL.createObjectURL(file);
+    const downloadCode = Math.floor(100000 + Math.random() * 900000);
+    const fullLink = `${location.href.split('#')[0]}#${downloadCode}`;
+
+    sessionStorage.setItem('fileURL_' + downloadCode, blobURL);
+    sessionStorage.setItem('fileName_' + downloadCode, file.name);
 
     linkArea.innerHTML = `
       <p>Link is ready:</p>
-      <input type="text" value="${fullURL}" id="copyText" readonly style="width:90%; padding:10px; font-size:16px;" />
+      <input type="text" value="${fullLink}" id="copyText" readonly />
       <br>
       <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
     `;
-
-    sessionStorage.setItem('fileURL', blobLink);
-    sessionStorage.setItem('fileName', fileName);
   });
 
   function copyLink() {
     const input = document.getElementById('copyText');
     input.select();
     document.execCommand('copy');
-    alert('Link copied! Now open it in the same browser.');
+    alert('Link copied!');
+  }
+
+  // عند الدخول عبر رابط تحميل
+  const hash = window.location.hash.slice(1);
+  const storedBlob = sessionStorage.getItem('fileURL_' + hash);
+  const storedName = sessionStorage.getItem('fileName_' + hash);
+  if (storedBlob && storedName) {
+    document.getElementById('mainBox').innerHTML = `
+      <p>Ready to download:</p>
+      <a href="${storedBlob}" download="${storedName}" class="copy-btn">⬇️ Download ${storedName}</a>
+    `;
   }
 </script>
 </body>
